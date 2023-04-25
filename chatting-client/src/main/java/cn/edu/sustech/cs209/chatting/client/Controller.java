@@ -70,6 +70,10 @@ public class Controller implements Initializable {
   @FXML
   public void shutdown() {
     try {
+      bfwriter.write("E");
+      bfwriter.flush();
+      bfwriter.close();
+      bfreader.close();
       this.socket.close();
     } catch (IOException e) {
       Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -320,6 +324,7 @@ public class Controller implements Initializable {
           }
         });
       } else {
+        e.printStackTrace();
         Platform.runLater(new Runnable() {
           @Override
           public void run() {
@@ -389,6 +394,7 @@ public class Controller implements Initializable {
     }
 
   }
+
   @FXML
   public void createGroupChat() throws IOException {
     AtomicReference<String> user = new AtomicReference<>();
@@ -503,9 +509,15 @@ public class Controller implements Initializable {
           toserver.flush();
 
         } catch (IOException e) {
-          Alert alert = new Alert(Alert.AlertType.ERROR);
-          alert.setContentText("The Server has been closed");
-          alert.show();
+          e.printStackTrace();
+          Platform.runLater(new Runnable() {
+            @Override
+            public void run() {
+              Alert alert = new Alert(Alert.AlertType.ERROR);
+              alert.setContentText("The Server has been closed");
+              alert.show();
+            }
+          });
         }
       }
     }).start();
@@ -530,35 +542,36 @@ public class Controller implements Initializable {
 
           setOnMouseClicked(event -> {
             if (!isEmpty() && !(getText() == null)) {
-              if(groupname != null && newmassage.get(groupname) != null && newmassage.get(groupname)){
-                newmassage.put(groupname, false);
-              }
               String g = getText();
-              if (g != null && g.length() > 0 && !g.contains("Chatting:")) {
+              if (g != null && g.length() > 0 && !g.contains("Chatting")) {
+                if (groupname != null && newmassage.get(groupname) != null && newmassage.get(groupname)) {
+                  newmassage.put(groupname, false);
+                }
                 currentgroup = g;
                 ingroupchat = currentgroup.contains("(");
-                try {
-                  refreshchatlist();
-                } catch (IOException | InterruptedException e) {
-                  e.printStackTrace();
-                }
                 chatContentList.getItems().clear();
                 chatContentList.refresh();
                 chatContentList.getItems().addAll(messages.get(g));
+              }
+              try {
+                refreshchatlist();
+              } catch (IOException | InterruptedException e) {
+                e.printStackTrace();
               }
             }
           });
           Platform.runLater(new Runnable() {
             @Override
             public void run() {
-              setText(groupname);
-              if(groupname != null && newmassage.get(groupname) != null) System.out.println(groupname + newmassage.get(groupname).toString());
-              if(groupname != null && newmassage.get(groupname) != null && newmassage.get(groupname)){
+
+              if (groupname != null && newmassage.get(groupname) != null)
+                System.out.println(groupname + newmassage.get(groupname).toString());
+              if (groupname != null && newmassage.get(groupname) != null && newmassage.get(groupname)) {
                 setStyle("-fx-background-color: yellow");
-              }else{
+              } else {
                 setStyle("-fx-background-color: white");
               }
-
+              setText(groupname);
             }
           });
         }

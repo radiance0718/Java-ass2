@@ -117,16 +117,6 @@ public class Main {
       }
     }
 
-    public Boolean isServerClose(Socket socket) {
-      try {
-        socket.sendUrgentData(0xFF);
-        return false;
-      } catch (Exception se) {
-        return true;
-      }
-    }
-
-
     @Override
     public void run() {
       try {
@@ -134,7 +124,7 @@ public class Main {
         outs = sock.getOutputStream();
 
         while (sock.isConnected() && available) {
-          if (isServerClose(sock)) available = false;
+          if (sock.isClosed()) available = false;
           char[] instruct = new char[505];
           Reader inr = new InputStreamReader(ins, StandardCharsets.UTF_8);
           inr.read(instruct);
@@ -201,6 +191,10 @@ public class Main {
               String str = getgroupmember(String.valueOf(instruct).trim().substring(1));
               this.outs.write(("G" + str).getBytes(StandardCharsets.UTF_8));
               this.outs.flush();
+              break;
+            }
+            case 'E': {
+              available = false;
               break;
             }
           }

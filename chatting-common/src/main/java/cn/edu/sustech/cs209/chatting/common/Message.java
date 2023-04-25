@@ -2,13 +2,13 @@ package cn.edu.sustech.cs209.chatting.common;
 
 public class Message {
 
-  private Long timestamp;
+  private final Long timestamp;
 
-  private String sentBy;
+  private final String sentBy;
 
-  private String sendTo;
+  private final String sendTo;
 
-  private String data;
+  private final String data;
 
   public Message(Long timestamp, String sentBy, String sendTo, String data) {
     this.timestamp = timestamp;
