@@ -108,7 +108,7 @@ public class Controller implements Initializable {
       refreshgroup = false;
       bfwriter.write("G" + currentgroup);
       bfwriter.flush();
-      wait(10);
+      wait(50);
       for (String s : groupmember) {
         chatList.getItems().add("Chatting: " + s);
       }
@@ -284,7 +284,18 @@ public class Controller implements Initializable {
           case 'F': {
 
             refreshnamelist(instruct);
-            refreshchatlist();
+            Platform.runLater(new Runnable() {
+              @Override
+              public void run() {
+                try {
+                  refreshchatlist();
+                } catch (IOException e) {
+                  e.printStackTrace();
+                } catch (InterruptedException e) {
+                  e.printStackTrace();
+                }
+              }
+            });
             break;
           }
           case 'E': {
@@ -303,7 +314,7 @@ public class Controller implements Initializable {
           }
         }
       }
-    } catch (IOException | InterruptedException e) {
+    } catch (IOException e) {
       //e.printStackTrace();
       if (socket.isClosed()) {
         Platform.runLater(new Runnable() {
@@ -525,7 +536,7 @@ public class Controller implements Initializable {
           setOnMouseClicked(event -> {
             if (!isEmpty() && !(getText() == null)) {
               String g = getText();
-              if (g != null && g.length() > 0 && !g.equals(currentgroup) && !g.contains("Chatting:")) {
+              if (g != null && g.length() > 0 && !g.contains("Chatting:")) {
                 currentgroup = g;
                 ingroupchat = currentgroup.contains("(");
                 try {
