@@ -72,16 +72,18 @@ public class Controller implements Initializable {
         });
     }
 
-    private void refreshgroupmembers(String members){
+    synchronized private void refreshgroupmembers(String members){
+        System.out.println("get:"+members);
         String[] member = members.split("/");
         groupmember.clear();
         for(int i = 0;i < member.length;i++){
             groupmember.add(member[i]);
+            System.out.println("member "+i+" is "+member[i]);
         }
         refreshgroup = true;
     }
 
-    private void refreshchatlist() throws IOException {
+    synchronized private void refreshchatlist() throws IOException, InterruptedException {
         if(currentgroup != null && currentgroup.contains("("))ingroupchat = true;
         else ingroupchat = false;
         chatList.getItems().clear();
@@ -91,7 +93,7 @@ public class Controller implements Initializable {
             refreshgroup = false;
             bfwriter.write("G"+currentgroup);
             bfwriter.flush();
-            while(!refreshgroup)continue;
+            wait(10);
             for(String s : groupmember){
                 chatList.getItems().add("Chatting: "+s);
             }
@@ -189,7 +191,7 @@ public class Controller implements Initializable {
                 public void run() {
                     try {
                         refreshchatlist();
-                    } catch (IOException e) {
+                    } catch (IOException | InterruptedException e) {
                         e.printStackTrace();
                     }
                 }
@@ -265,7 +267,7 @@ public class Controller implements Initializable {
                                 grouplist.add(groupname);
                                 try {
                                     refreshchatlist();
-                                } catch (IOException e) {
+                                } catch (IOException | InterruptedException e) {
                                     e.printStackTrace();
                                 }
                             }
@@ -322,7 +324,7 @@ public class Controller implements Initializable {
     }
 
     @FXML
-    public void createPrivateChat() throws IOException {
+    public void createPrivateChat() throws IOException, InterruptedException {
         AtomicReference<String> user = new AtomicReference<>();
 
         Stage stage = new Stage();
@@ -348,7 +350,9 @@ public class Controller implements Initializable {
         Button okBtn = new Button("OK");
         okBtn.setOnAction(e -> {
             user.set(userSel.getSelectionModel().getSelectedItem());
-            stage.close();
+            if(user.get() != null && !user.equals("")){
+                stage.close();
+            }
         });
 
         HBox box = new HBox(10);
@@ -468,7 +472,7 @@ public class Controller implements Initializable {
         groupname = groupname.substring(1);
         if(users.size() > 3)groupname  += "...";
         groupname += "("+users.size()+")";
-
+        System.out.println("Send: C"+groupname+alluser);
         bfwriter.write(("C"+groupname+alluser));
         bfwriter.flush();
     }
@@ -550,9 +554,6 @@ public class Controller implements Initializable {
                     }
 
                     setOnMouseClicked(event-> {
-                        Platform.runLater(new Runnable() {
-                            @Override
-                            public void run() {
                                 if (!isEmpty() && !(getText() == null)) {
                                     String g = getText();
                                     System.out.println("Click on " + g);
@@ -564,7 +565,7 @@ public class Controller implements Initializable {
                                         System.out.println("now group is:"+currentgroup);
                                         try {
                                             refreshchatlist();
-                                        } catch (IOException e) {
+                                        } catch (IOException | InterruptedException e) {
                                             e.printStackTrace();
                                         }
                                         chatContentList.getItems().clear();
@@ -572,8 +573,6 @@ public class Controller implements Initializable {
                                         chatContentList.getItems().addAll(messages.get(g));
                                     }
                                 }
-                            }
-                        });
                     });
                     Platform.runLater(new Runnable() {
                         @Override

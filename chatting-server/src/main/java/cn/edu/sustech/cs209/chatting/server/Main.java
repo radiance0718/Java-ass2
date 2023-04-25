@@ -89,21 +89,26 @@ public class Main {
                             break;
                         }
                     }
-                    if(tag){
-                        System.out.println(s);
-                        for(serverThread p: grouplist.get(s)){
-                            System.out.println(p.name);
-                            Message mes = new Message(System.currentTimeMillis(), "System message", s, name+" has been offline");
-                            p.outs.write(("M"+mes.toString()).getBytes(StandardCharsets.UTF_8));
-                            p.outs.flush();
-                        }
-                    }
+//                    if(tag){
+//                        System.out.println(s);
+//                        for(serverThread p: grouplist.get(s)){
+//                            System.out.println(p.name);
+//                            Message mes = new Message(System.currentTimeMillis(), "System message", s, name+" has been offline");
+//
+//                            p.outs.write(("M"+mes.toString()+"\0").getBytes(StandardCharsets.UTF_8));
+//                            for(int i = 1;i <= 100;i++){
+//                                p.outs.flush();
+//                            }
+//                        }
+//                    }
                 }
                 userlist.remove(name);
                 System.out.println("Remove "+name+" succesfully");
                 for(serverThread p: userlist.values()){
                     p.outs.write(("F"+getuserlist()).getBytes(StandardCharsets.UTF_8));
-                    p.outs.flush();
+                    for(int i = 1;i <= 20;i++){
+                        p.outs.flush();
+                    }
                 }
             }catch(IOException e){
                 e.printStackTrace();
@@ -127,7 +132,7 @@ public class Main {
                 outs = sock.getOutputStream();
 
                 while(sock.isConnected() && available){
-                    if(isServerClose(sock))quitchat();
+                    if(isServerClose(sock))available = false;
                     char[] instruct = new char[505];
                     Reader inr = new InputStreamReader(ins, "UTF-8");
                     inr.read(instruct);
@@ -208,6 +213,8 @@ public class Main {
 
             }catch(IOException e){
 
+            }finally {
+                quitchat();
             }
         }
     }
