@@ -58,6 +58,7 @@ public class Controller implements Initializable {
   BufferedReader bfreader = null;
   String username;
   HashMap<String, ArrayList<Message>> messages = new HashMap<>();
+  HashMap<String, Boolean> newmassage = new HashMap<String, Boolean>();
   String[] namelist = null;
   boolean refreshcheck = false;
   String currentgroup = null;
@@ -190,22 +191,12 @@ public class Controller implements Initializable {
     }).start();
   }
 
-  public void addamessage(Message mes) throws IOException {
+  public void addamessage(Message mes) throws IOException, InterruptedException {
     ArrayList<Message> lv;
-    if (mes.getSentBy().equals("System message")) {
-      Platform.runLater(new Runnable() {
-        @Override
-        public void run() {
-          try {
-            refreshchatlist();
-          } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-          }
-        }
-      });
-    }
     if (mes.getSendTo().equals(username)) {
       lv = messages.get(mes.getSentBy());
+      newmassage.put(mes.getSentBy(), true);
+      refreshchatlist();
       Platform.runLater(new Runnable() {
         @Override
         public void run() {
@@ -217,6 +208,8 @@ public class Controller implements Initializable {
       });
     } else {
       lv = messages.get(mes.getSendTo());
+      newmassage.put(mes.getSendTo(), !mes.getSentBy().equals(username));
+      refreshchatlist();
       Platform.runLater(new Runnable() {
         @Override
         public void run() {
@@ -267,6 +260,7 @@ public class Controller implements Initializable {
               @Override
               public void run() {
                 grouplist.add(groupname);
+                newmassage.put(groupname, true);
                 try {
                   refreshchatlist();
                 } catch (IOException | InterruptedException e) {
@@ -314,7 +308,7 @@ public class Controller implements Initializable {
           }
         }
       }
-    } catch (IOException e) {
+    } catch (IOException | InterruptedException e) {
       //e.printStackTrace();
       if (socket.isClosed()) {
         Platform.runLater(new Runnable() {
@@ -390,6 +384,7 @@ public class Controller implements Initializable {
       chatContentList.getItems().clear();
       chatContentList.refresh();
       grouplist.add(user.get());
+      newmassage.put(user.get(), true);
       refreshchatlist();
     }
 
@@ -535,6 +530,9 @@ public class Controller implements Initializable {
 
           setOnMouseClicked(event -> {
             if (!isEmpty() && !(getText() == null)) {
+              if(groupname != null && newmassage.get(groupname) != null && newmassage.get(groupname)){
+                newmassage.put(groupname, false);
+              }
               String g = getText();
               if (g != null && g.length() > 0 && !g.contains("Chatting:")) {
                 currentgroup = g;
@@ -554,10 +552,16 @@ public class Controller implements Initializable {
             @Override
             public void run() {
               setText(groupname);
+              if(groupname != null && newmassage.get(groupname) != null) System.out.println(groupname + newmassage.get(groupname).toString());
+              if(groupname != null && newmassage.get(groupname) != null && newmassage.get(groupname)){
+                setStyle("-fx-background-color: yellow");
+              }else{
+                setStyle("-fx-background-color: white");
+              }
+
             }
           });
         }
-
       };
 
 
